@@ -13,10 +13,10 @@ from strawberry.types import Info
 from typing import Optional
 from strawberry.file_uploads import Upload
 
-
-
 minio_client = Minio(endpoint="192.168.23.49:9000", access_key="fB7tN1WMnkAPzciqkPOG",
                      secret_key="WxzjBKitDBoBViQLpEhx4LywKyj20PKVxWtwpWJM", secure=False)
+
+from strawberry.asgi import GraphQL
 
 
 def _generate_code():
@@ -145,7 +145,16 @@ class Mutation:
 schema = strawberry.Schema(query=Query, mutation=Mutation)
 graphql_app = GraphQL(schema)
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
 
+# Set up CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_route("/graphql", graphql_app)
 app.add_websocket_route("/graphql", graphql_app)
 
