@@ -13,6 +13,8 @@ from strawberry.types import Info
 from typing import Optional
 from strawberry.file_uploads import Upload
 
+
+
 minio_client = Minio(endpoint="192.168.23.49:9000", access_key="fB7tN1WMnkAPzciqkPOG",
                      secret_key="WxzjBKitDBoBViQLpEhx4LywKyj20PKVxWtwpWJM", secure=False)
 
@@ -25,6 +27,7 @@ def _generate_code():
 class Message:
     message: str
     status_code: int
+    id: Optional[str]
 
 
 @strawberry.input
@@ -43,6 +46,12 @@ class FileTransferInput:
 class FileRemoveInput:
     bucket_name: str
     object_name: str
+
+
+@strawberry.input
+class Response:
+    status_code: int
+    id: str
 
 
 @strawberry.type
@@ -91,7 +100,7 @@ class Mutation:
             return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
-    async def fput_object(self, info: Info, bucket_name: str, file: Upload, token: str) -> Optional[Message]:
+    async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
             object_id = _generate_code()
             user_metadata = {
@@ -99,9 +108,9 @@ class Mutation:
                 "object_id": object_id,
             }
             file_object = await file.read()
-            response = minio_client.put_object(bucket_name, object_id, io.BytesIO(file_object), length=-1,
+            response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024, metadata=user_metadata, )
-            return Message(message=response.object_name, status_code=1200)
+            return Message(message="success", id=response.object_name, status_code=1200)
         except Exception as e:
             return Message(message=str(e), status_code=1400)
 

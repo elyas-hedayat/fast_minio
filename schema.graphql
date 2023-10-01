@@ -16,11 +16,12 @@ input FileTransferInput {
 type Message {
   message: String!
   statusCode: Int!
+  id: String
 }
 
 type Mutation {
   removeBucket(input: BucketInput!): Message
-  fputObject(bucketName: String!, file: Upload!, token: String!): Message
+  userPutObject(file: Upload!, token: String!): Message
   transferBucket(input: FileTransferInput!): Message
   removeObject(input: FileRemoveInput!, token: String!): Message
 }
