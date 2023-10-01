@@ -24,7 +24,7 @@ def _generate_code():
 class Message:
     message: str
     status_code: int
-    id: str | None
+    id: Optional[str] = None
 
 
 @strawberry.input
