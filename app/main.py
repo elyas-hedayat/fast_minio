@@ -99,11 +99,13 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
+            print(token)
             object_id = _generate_code()
             user_metadata = {
                 "owner_id": "test",
                 "object_id": object_id,
             }
+            print(file)
             file_object = await file.read()
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024, metadata=user_metadata, )
