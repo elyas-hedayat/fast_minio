@@ -1,3 +1,5 @@
+scalar Upload
+
 input BucketInput {
   name: String!
 }
@@ -33,5 +35,3 @@ type Query {
   listObjects(bucketName: String!): Message
   getObject(bucketName: String!, objectName: String!): Message
 }
-
-scalar Upload

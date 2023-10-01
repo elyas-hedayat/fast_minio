@@ -8,15 +8,12 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from minio import Minio
 from minio.commonconfig import CopySource
 from strawberry.asgi import GraphQL
-from strawberry.schema import Schema
 from strawberry.types import Info
 from typing import Optional
 from strawberry.file_uploads import Upload
 
 minio_client = Minio(endpoint="192.168.23.49:9000", access_key="fB7tN1WMnkAPzciqkPOG",
                      secret_key="WxzjBKitDBoBViQLpEhx4LywKyj20PKVxWtwpWJM", secure=False)
-
-from strawberry.asgi import GraphQL
 
 
 def _generate_code():
@@ -27,7 +24,7 @@ def _generate_code():
 class Message:
     message: str
     status_code: int
-    id: Optional[str]
+    id: str | None
 
 
 @strawberry.input
