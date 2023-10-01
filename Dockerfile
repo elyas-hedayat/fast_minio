@@ -24,4 +24,4 @@ VOLUME /data
 EXPOSE 8035 9010
 
 # Start services
-CMD ["/bin/sh", "-c", "minio server /data --address :9010 & uvicorn main:app --host 0.0.0.0 --port 8035"]
+CMD ["bash", "-c", "minio server /data --address :9010 & uvicorn main:app --host 0.0.0.0 --port 8035"]
