@@ -20,9 +20,9 @@ type Message {
 
 type Mutation {
   removeBucket(input: BucketInput!): Message
-  fputObject(bucketName: String!, file: Upload!): Message
+  fputObject(bucketName: String!, file: Upload!, token: String!): Message
   transferBucket(input: FileTransferInput!): Message
-  removeObject(input: FileRemoveInput!): Message
+  removeObject(input: FileRemoveInput!, token: String!): Message
 }
 
 type Query {

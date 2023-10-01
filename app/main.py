@@ -91,7 +91,7 @@ class Mutation:
             return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
-    async def fput_object(self, info: Info, bucket_name: str, file: Upload) -> Optional[Message]:
+    async def fput_object(self, info: Info, bucket_name: str, file: Upload, token: str) -> Optional[Message]:
         try:
             object_id = _generate_code()
             user_metadata = {
@@ -125,7 +125,7 @@ class Mutation:
             return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
-    async def remove_object(self, info: Info, input: FileRemoveInput) -> Optional[Message]:
+    async def remove_object(self, info: Info, input: FileRemoveInput, token: str) -> Optional[Message]:
         try:
             minio_client.remove_object(input.bucket_name, input.object_name)
             return Message(message="Object removed", status_code=1200)
