@@ -24,6 +24,7 @@ def _generate_code():
 @strawberry.type
 class Message:
     message: str
+    status_code: int
 
 
 @strawberry.input
@@ -50,32 +51,33 @@ class Query:
     async def make_bucket(self, info: Info, bucket_name: str) -> Optional[Message]:
         try:
             minio_client.make_bucket(bucket_name=bucket_name)
-            return Message(message="Bucket created")
+            return Message(message="Bucket created", status_code=1200
+                           )
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
     @strawberry.field
-    async def bucket_exists(self, info: Info, bucket_name: str) -> bool:
+    async def bucket_exists(self, info: Info, bucket_name: str) -> Optional[Message]:
         bucket_exist = minio_client.bucket_exists(bucket_name)
-        return bucket_exist
+        return Message(message=bucket_exist, status_code=1200)
 
     @strawberry.field
     async def list_buckets(self, info: Info) -> Optional[Message]:
         buckets = minio_client.list_buckets()
-        return Message(message=buckets)
+        return Message(message=buckets, status_code=1200)
 
     @strawberry.field
     async def list_objects(self, info: Info, bucket_name: str) -> Optional[Message]:
         objects = minio_client.list_objects(bucket_name=bucket_name)
-        return Message(message=objects)
+        return Message(message=objects, status_code=1200)
 
     @strawberry.field
     def get_object(self, info: Info, bucket_name: str, object_name: str) -> Optional[Message]:
         try:
             response = minio_client.get_object(bucket_name=bucket_name, object_name=object_name)
-            return Message(message=response.url)
+            return Message(message=response.url, status_code=1200)
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
 
 @strawberry.type
@@ -84,9 +86,9 @@ class Mutation:
     async def remove_bucket(self, info: Info, input: BucketInput) -> Optional[Message]:
         try:
             minio_client.remove_bucket(input.name)
-            return Message(message="Bucket removed")
+            return Message(message="Bucket removed", status_code=1200)
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
     async def fput_object(self, info: Info, bucket_name: str, file: Upload) -> Optional[Message]:
@@ -99,9 +101,9 @@ class Mutation:
             file_object = await file.read()
             response = minio_client.put_object(bucket_name, object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024, metadata=user_metadata, )
-            return Message(message=response.object_name)
+            return Message(message=response.object_name, status_code=1200)
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
     async def transfer_bucket(self, info: Info, input: FileTransferInput) -> Optional[Message]:
@@ -118,17 +120,17 @@ class Mutation:
                     CopySource(input.source_bucket, item)  # source bucket/object
                 )
                 minio_client.remove_object(input.source_bucket, item)
-            return Message(message="Objects copied successfully and removed from temp bucket.")
+            return Message(message="Objects copied successfully and removed from temp bucket.", status_code=1200)
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
     async def remove_object(self, info: Info, input: FileRemoveInput) -> Optional[Message]:
         try:
             minio_client.remove_object(input.bucket_name, input.object_name)
-            return Message(message="Object removed")
+            return Message(message="Object removed", status_code=1200)
         except Exception as e:
-            return Message(message=str(e))
+            return Message(message=str(e), status_code=1400)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

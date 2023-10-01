@@ -1,0 +1,36 @@
+input BucketInput {
+  name: String!
+}
+
+input FileRemoveInput {
+  bucketName: String!
+  objectName: String!
+}
+
+input FileTransferInput {
+  sourceBucket: String!
+  destinationBucket: String!
+  objectList: [String!]!
+}
+
+type Message {
+  message: String!
+  statusCode: Int!
+}
+
+type Mutation {
+  removeBucket(input: BucketInput!): Message
+  fputObject(bucketName: String!, file: Upload!): Message
+  transferBucket(input: FileTransferInput!): Message
+  removeObject(input: FileRemoveInput!): Message
+}
+
+type Query {
+  makeBucket(bucketName: String!): Message
+  bucketExists(bucketName: String!): Message
+  listBuckets: Message
+  listObjects(bucketName: String!): Message
+  getObject(bucketName: String!, objectName: String!): Message
+}
+
+scalar Upload
