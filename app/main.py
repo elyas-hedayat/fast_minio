@@ -41,7 +41,6 @@ class FileTransferInput:
 
 @strawberry.input
 class FileRemoveInput:
-    bucket_name: str
     object_name: str
 
 
@@ -99,13 +98,14 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
-            print(token)
+            file_path = file
+            ext = os.path.splitext(file_path)[1]
+            print(ext)
             object_id = _generate_code()
             user_metadata = {
                 "owner_id": "test",
                 "object_id": object_id,
             }
-            print(file)
             file_object = await file.read()
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024, metadata=user_metadata, )
@@ -133,9 +133,9 @@ class Mutation:
             return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
-    async def remove_object(self, info: Info, input: FileRemoveInput, token: str) -> Optional[Message]:
+    async def remove_object(self, info: Info, object_name, token: str) -> Optional[Message]:
         try:
-            minio_client.remove_object(input.bucket_name, input.object_name)
+            minio_client.remove_object("temp", object_name)
             return Message(message="Object removed", status_code=1200)
         except Exception as e:
             return Message(message=str(e), status_code=1400)
