@@ -133,7 +133,7 @@ class Mutation:
             return Message(message=str(e), status_code=1400)
 
     @strawberry.mutation
-    async def remove_object(self, info: Info, object_name, token: str) -> Optional[Message]:
+    async def user_remove_object(self, info: Info, object_name: str, token: str) -> Optional[Message]:
         try:
             minio_client.remove_object("temp", object_name)
             return Message(message="Object removed", status_code=1200)

@@ -4,11 +4,6 @@ input BucketInput {
   name: String!
 }
 
-input FileRemoveInput {
-  bucketName: String!
-  objectName: String!
-}
-
 input FileTransferInput {
   sourceBucket: String!
   destinationBucket: String!
@@ -25,7 +20,7 @@ type Mutation {
   removeBucket(input: BucketInput!): Message
   userPutObject(file: Upload!, token: String!): Message
   transferBucket(input: FileTransferInput!): Message
-  removeObject(input: FileRemoveInput!, token: String!): Message
+  userRemoveObject(objectName: String!, token: String!): Message
 }
 
 type Query {
@@ -35,3 +30,4 @@ type Query {
   listObjects(bucketName: String!): Message
   getObject(bucketName: String!, objectName: String!): Message
 }
+
