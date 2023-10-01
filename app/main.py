@@ -98,9 +98,6 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
-            file_path = file
-            ext = os.path.splitext(file_path)[1]
-            print(ext)
             object_id = _generate_code()
             user_metadata = {
                 "owner_id": "test",
