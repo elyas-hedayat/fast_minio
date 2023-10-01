@@ -2,11 +2,16 @@ import binascii
 import io
 import os
 from typing import List
+
+import strawberry
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from minio import Minio
 from minio.commonconfig import CopySource
-
-app = FastAPI()
+from strawberry.asgi import GraphQL
+from strawberry.schema import Schema
+from strawberry.types import Info
+from typing import Optional
+from strawberry.file_uploads import Upload
 
 minio_client = Minio(endpoint="192.168.23.49:9000", access_key="fB7tN1WMnkAPzciqkPOG",
                      secret_key="WxzjBKitDBoBViQLpEhx4LywKyj20PKVxWtwpWJM", secure=False)
@@ -16,50 +21,125 @@ def _generate_code():
     return binascii.hexlify(os.urandom(20)).decode('utf-8')
 
 
-# Bucket actions
-@app.post("/make_bucket")
-def make_bucket(bucket_name: str):
-    try:
-        minio_client.make_bucket(bucket_name=bucket_name)
-        return {"message": "Bucket created"}
-    except Exception as e:
-        return {"message": str(e)}
+@strawberry.type
+class Message:
+    message: str
 
 
-@app.get("/list_buckets")
-def list_buckets():
-    buckets = minio_client.list_buckets()
-    return {"buckets": buckets}
+@strawberry.input
+class BucketInput:
+    name: str
 
 
-@app.get("/bucket_exists")
-def bucket_exists(bucket_name: str):
-    return {"exists": minio_client.bucket_exists(bucket_name)}
+@strawberry.input
+class FileTransferInput:
+    source_bucket: str
+    destination_bucket: str
+    object_list: List[str]
 
 
-@app.delete("/remove_bucket")
-def remove_bucket(bucket_name: str):
-    try:
-        minio_client.remove_bucket(bucket_name)
-        return {"message": "Bucket removed"}
-    except Exception as e:
-        return {"message": str(e)}
+@strawberry.input
+class FileRemoveInput:
+    bucket_name: str
+    object_name: str
+
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def make_bucket(self, info: Info, bucket_name: str) -> Optional[Message]:
+        try:
+            minio_client.make_bucket(bucket_name=bucket_name)
+            return Message(message="Bucket created")
+        except Exception as e:
+            return Message(message=str(e))
+
+    @strawberry.field
+    async def bucket_exists(self, info: Info, bucket_name: str) -> bool:
+        bucket_exist = minio_client.bucket_exists(bucket_name)
+        return bucket_exist
+
+    @strawberry.field
+    async def list_buckets(self, info: Info) -> Optional[Message]:
+        buckets = minio_client.list_buckets()
+        return Message(message=buckets)
+
+    @strawberry.field
+    async def list_objects(self, info: Info, bucket_name: str) -> Optional[Message]:
+        objects = minio_client.list_objects(bucket_name=bucket_name)
+        return Message(message=objects)
+
+    @strawberry.field
+    def get_object(self, info: Info, bucket_name: str, object_name: str) -> Optional[Message]:
+        try:
+            response = minio_client.get_object(bucket_name=bucket_name, object_name=object_name)
+            return Message(message=response.url)
+        except Exception as e:
+            return Message(message=str(e))
+
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def remove_bucket(self, info: Info, input: BucketInput) -> Optional[Message]:
+        try:
+            minio_client.remove_bucket(input.name)
+            return Message(message="Bucket removed")
+        except Exception as e:
+            return Message(message=str(e))
+
+    @strawberry.mutation
+    async def fput_object(self, info: Info, bucket_name: str, file: Upload) -> Optional[Message]:
+        try:
+            object_id = _generate_code()
+            user_metadata = {
+                "owner_id": "test",
+                "object_id": object_id,
+            }
+            file_object = await file.read()
+            response = minio_client.put_object(bucket_name, object_id, io.BytesIO(file_object), length=-1,
+                                               part_size=10 * 1024 * 1024, metadata=user_metadata, )
+            return Message(message=response.object_name)
+        except Exception as e:
+            return Message(message=str(e))
+
+    @strawberry.mutation
+    async def transfer_bucket(self, info: Info, input: FileTransferInput) -> Optional[Message]:
+        source_exists = minio_client.bucket_exists(input.source_bucket)
+        destination_exists = minio_client.bucket_exists(input.destination_bucket)
+
+        if not (source_exists and destination_exists):
+            return Message(detail="Source or destination bucket does not exist")
+        try:
+            for item in input.object_list:
+                minio_client.copy_object(
+                    input.destination_bucket,
+                    item,
+                    CopySource(input.source_bucket, item)  # source bucket/object
+                )
+                minio_client.remove_object(input.source_bucket, item)
+            return Message(message="Objects copied successfully and removed from temp bucket.")
+        except Exception as e:
+            return Message(message=str(e))
+
+    @strawberry.mutation
+    async def remove_object(self, info: Info, input: FileRemoveInput) -> Optional[Message]:
+        try:
+            minio_client.remove_object(input.bucket_name, input.object_name)
+            return Message(message="Object removed")
+        except Exception as e:
+            return Message(message=str(e))
+
+
+schema = strawberry.Schema(query=Query, mutation=Mutation)
+graphql_app = GraphQL(schema)
+app = FastAPI()
+
+app.add_route("/graphql", graphql_app)
+app.add_websocket_route("/graphql", graphql_app)
 
 
 # Object actions
-@app.get("/list_objects")
-def list_objects(bucket_name: str):
-    objects = minio_client.list_objects(bucket_name=bucket_name)
-    return {"objects": objects}
-
-
-@app.get("/get_object")
-def get_object(bucket_name: str, object_name: str):
-    try:
-        response = minio_client.get_object(bucket_name=bucket_name, object_name=object_name)
-        return {"message": response.url}
-    except Exception as e:
-        return {"message": str(e)}
 
 
 # set_object_tags(bucket_name, object_name, tags, version_id=None)
@@ -71,50 +151,9 @@ def put_object(bucket_name: str, object_name: str, file: bytes = File(...)):
     return {"length": length}
 
 
-@app.post("/fput_object")
-async def fput_object(bucket_name: str, object_name: str, file: UploadFile = File(...)):
-    try:
-        object_id = _generate_code()
-        user_metadata = {
-            "owner_id": "test",
-            "object_id": object_id,
-        }
-        file_object = await file.read()
-        response = minio_client.put_object(bucket_name, object_id, io.BytesIO(file_object), length=-1,
-                                           part_size=10 * 1024 * 1024, metadata=user_metadata, )
-        return {"message": response.object_name}
-    except Exception as e:
-        return {"message": str(e)}
-
-
 # Other actions
-@app.post("/remove_object")
-def remove_object(bucket_name: str, object_name: str):
-    minio_client.remove_object(bucket_name, object_name)
-    return {"message": "Object removed"}
 
 
-@app.post("/transfer_bucket")
-def transfer_bucket(source_bucket: str, destination_bucket: str, object_list: List[str]):
-    source_exists = minio_client.bucket_exists(source_bucket)
-    destination_exists = minio_client.bucket_exists(destination_bucket)
-
-    if not (source_exists and destination_exists):
-        return {"detail": "Source or destination bucket does not exist"}
-    try:
-        for item in object_list:
-            minio_client.copy_object(
-                destination_bucket,
-                item,
-                CopySource(source_bucket, item)  # source bucket/object
-            )
-            minio_client.remove_object(source_bucket, item)
-        return {"message": "Objects copied successfully and removed from temp bucket."}
-    except Exception as e:
-        return {"message": str(e)}
-
-
-# @app.post("/transfer_bucket")
 # def transfer_bucket(source_bucket: str, destination_bucket: str, object_list: List[str]):
 #     source_exists = minio_client.bucket_exists(source_bucket)
 #     print(source_exists)
