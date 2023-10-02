@@ -1,6 +1,6 @@
-import pika
 import json
 
+import pika
 from fastapi import FastAPI
 from minio import Minio
 from minio.commonconfig import CopySource
@@ -37,7 +37,7 @@ def on_request(ch, method, props, body):
             CopySource(data['source_bucket'], item)  # source bucket/object
         )
         minio_client.remove_object(data['source_bucket'], item)
-    ch.basic_ack(delivery_tag=method.delivery_tag, multiple=True)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 channel.basic_qos(prefetch_count=1)

@@ -1,16 +1,16 @@
 import binascii
 import io
 import os
-from typing import List
+from typing import List, Optional
 
 import strawberry
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI
 from minio import Minio
-from minio.commonconfig import CopySource
+from minio.commonconfig import CopySource, Tags
+from starlette.middleware.cors import CORSMiddleware
 from strawberry.asgi import GraphQL
-from strawberry.types import Info
-from typing import Optional
 from strawberry.file_uploads import Upload
+from strawberry.types import Info
 
 minio_client = Minio(endpoint="192.168.23.49:9000", access_key="fB7tN1WMnkAPzciqkPOG",
                      secret_key="WxzjBKitDBoBViQLpEhx4LywKyj20PKVxWtwpWJM", secure=False)
@@ -56,10 +56,10 @@ class Query:
     async def make_bucket(self, info: Info, bucket_name: str) -> Optional[Message]:
         try:
             minio_client.make_bucket(bucket_name=bucket_name)
-            return Message(message="Bucket created", status_code=1200
+            return Message(message="باکت با موفقیت ساخته شد", status_code=1200
                            )
         except Exception as e:
-            return Message(message=str(e), status_code=1400)
+            return Message(message="خطلا در ساخت بلاکت", status_code=1400)
 
     @strawberry.field
     async def bucket_exists(self, info: Info, bucket_name: str) -> Optional[Message]:
@@ -98,17 +98,16 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
+            print(dir(file))
             object_id = _generate_code()
-            user_metadata = {
-                "owner_id": "test",
-                "object_id": object_id,
-            }
             file_object = await file.read()
+            tags = Tags(for_object=True)
+            tags["user_token"] = token
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
-                                               part_size=10 * 1024 * 1024, metadata=user_metadata, )
-            return Message(message="success", id=response.object_name, status_code=1200)
+                                               part_size=10 * 1024 * 1024, tags=tags)
+            return Message(message="تصویر با موفقیت باگذاری شد", id=response.object_name, status_code=1200)
         except Exception as e:
-            return Message(message=str(e), status_code=1400)
+            return Message(message="خطلا در بارگذاری محصول", status_code=1400)
 
     @strawberry.mutation
     async def transfer_bucket(self, info: Info, input: FileTransferInput) -> Optional[Message]:
@@ -132,18 +131,18 @@ class Mutation:
     @strawberry.mutation
     async def user_remove_object(self, info: Info, object_name: str, token: str) -> Optional[Message]:
         try:
-            minio_client.remove_object("temp", object_name)
-            return Message(message="Object removed", status_code=1200)
+            try:
+                response = minio_client.get_object(bucket_name="temp", object_name=object_name)
+                minio_client.remove_object("temp", object_name)
+                return Message(message="تصویر با موفقیت حذف شد", status_code=1200)
+            except Exception as e:
+                return Message(message="تصویر موجود نیست", status_code=1404)
         except Exception as e:
-            return Message(message=str(e), status_code=1400)
+            return Message(message="خطلا در بارگذاری تصویر", status_code=1400)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
 graphql_app = GraphQL(schema)
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
-
-# Set up CORS
 
 app = FastAPI()
 app.add_middleware(
@@ -156,40 +155,3 @@ app.add_middleware(
 
 app.add_route("/graphql", graphql_app)
 app.add_websocket_route("/graphql", graphql_app)
-
-
-# Object actions
-
-
-# set_object_tags(bucket_name, object_name, tags, version_id=None)
-
-
-@app.put("/put_object")
-def put_object(bucket_name: str, object_name: str, file: bytes = File(...)):
-    length = minio_client.put_object(bucket_name=bucket_name, object_name=object_name, data=file, length=-1)
-    return {"length": length}
-
-
-# Other actions
-
-
-# def transfer_bucket(source_bucket: str, destination_bucket: str, object_list: List[str]):
-#     source_exists = minio_client.bucket_exists(source_bucket)
-#     print(source_exists)
-#     destination_exists = minio_client.bucket_exists(destination_bucket)
-#     print(destination_exists)
-#     if not (source_exists and destination_exists):
-#         return {"status_code": 404, "detail": "Item not found"}
-#     # for item in object_list:
-#     #     minio_client.copy_object(
-#     #         destination_bucket,
-#     #         item.object_name,
-#     #         CopySource(destination_bucket, item),
-#     #     )
-#     return {"message": "item copied"}
-
-
-@app.get("/presigned_get_object")
-def presigned_get_object(bucket_name: str, object_name: str):
-    url = minio_client.presigned_get_object(bucket_name, object_name)
-    return {"url": url}
