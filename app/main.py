@@ -98,10 +98,7 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
-            print(dir(file))
-            print(file.filename)
-            object_id = _generate_code()
-            print(object_id + file.filename)
+            object_id = _generate_code() + file.filename
             file_object = await file.read()
             tags = Tags(for_object=True)
             tags["user_token"] = token
