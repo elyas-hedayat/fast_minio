@@ -134,7 +134,6 @@ class Mutation:
     async def user_remove_object(self, info: Info, object_name: str, token: str) -> Optional[Message]:
         try:
             try:
-                response = minio_client.get_object(bucket_name="temp", object_name=object_name)
                 minio_client.remove_object("temp", object_name)
                 return Message(message="تصویر با موفقیت حذف شد", status_code=1200)
             except Exception as e:
