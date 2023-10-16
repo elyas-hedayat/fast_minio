@@ -50,6 +50,10 @@ class Response:
     id: str
 
 
+def check_permission():
+    pass
+
+
 @strawberry.type
 class Query:
     @strawberry.field
@@ -77,10 +81,11 @@ class Query:
         return Message(message=objects, status_code=1200)
 
     @strawberry.field
-    def get_object(self, info: Info, bucket_name: str, object_name: str) -> Optional[Message]:
+    def get_object(self, info: Info, bucket_name: str | None, object_name: str) -> Optional[Message]:
         try:
+            bucket_name = bucket_name if bucket_name else "profile"
             response = minio_client.get_object(bucket_name=bucket_name, object_name=object_name)
-            return Message(message=response.url, status_code=1200)
+            return Message(message=response.fileno(), status_code=1200)
         except Exception as e:
             return Message(message=str(e), status_code=1400)
 
