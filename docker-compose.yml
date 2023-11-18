@@ -6,7 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: minio_client
-    entrypoint: . docker_entrypoint.sh
+    command:
+      - uvicorn app.main:app --host 0.0.0.0 --port 8024
     restart: always
     ports:
       - "8024:8024"
