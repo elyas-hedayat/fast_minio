@@ -1,19 +1,11 @@
-FROM python:3.9
+FROM python:3.10
 
 WORKDIR /code
 
+COPY ./requirements.txt .
 
-RUN pip install virtualenv
+RUN pip install -r requirements.txt
 
-RUN mkdir /code/venv
+COPY ./ .
 
-RUN python -m venv /code/venv
-
-RUN . /code/venv/bin/activate
-
-COPY ./requirements.txt /code/venv/
-RUN pip install -r /code/venv/requirements.txt
-
-COPY ./app /code/app
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8023"]
+EXPOSE 8024

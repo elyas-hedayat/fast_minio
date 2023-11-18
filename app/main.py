@@ -2,7 +2,7 @@ import binascii
 import io
 import os
 from typing import List, Optional
-
+from botocore.response import StreamingBody
 import strawberry
 from fastapi import FastAPI
 from minio import Minio
@@ -81,11 +81,12 @@ class Query:
         return Message(message=objects, status_code=1200)
 
     @strawberry.field
-    def get_object(self, info: Info, bucket_name: str | None, object_name: str) -> Optional[Message]:
+    def get_object(self, info: Info, object_name: str) -> Optional[Message]:
         try:
-            bucket_name = bucket_name if bucket_name else "profile"
+            bucket_name = "profile"
             response = minio_client.get_object(bucket_name=bucket_name, object_name=object_name)
-            return Message(message=response.fileno(), status_code=1200)
+            url = "http://192.168.23.49:9000"
+            return Message(message=url + response.url, status_code=1200)
         except Exception as e:
             return Message(message=str(e), status_code=1400)
 

@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  minio_client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minio_client
+    entrypoint: docker_entrypoint.sh
+    restart: always
+    ports:
+      - "8024:8024"
+    volumes:
+      - .:/minio_client
+
+
