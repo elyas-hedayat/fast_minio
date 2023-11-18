@@ -1,7 +1,7 @@
 FROM python:3.10
 
 
-RUN adduser -D myuser
+RUN adduser  myuser
 USER myuser
 
 WORKDIR /code
