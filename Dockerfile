@@ -1,17 +1,15 @@
 FROM python:3.10
 
-
 RUN adduser  myuser
 USER myuser
 
 WORKDIR /code
 
-
-COPY ./requirements.txt .
+COPY ./requirements.txt /code/.
 
 RUN  pip install --upgrade pip & pip install -r requirements.txt
 
-COPY ./ .
+COPY . /code/
 
 EXPOSE 8024
 
