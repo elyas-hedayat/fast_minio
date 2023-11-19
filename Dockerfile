@@ -15,4 +15,4 @@ COPY ./ .
 
 EXPOSE 8024
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8023"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8024"]
