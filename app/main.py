@@ -135,13 +135,10 @@ class Mutation:
     @strawberry.mutation
     async def user_remove_object(self, info: Info, object_name: str, token: str) -> Optional[Message]:
         try:
-            try:
-                minio_client.remove_object("temp", object_name)
-                return Message(message="تصویر با موفقیت حذف شد", status_code=1200)
-            except Exception as e:
-                return Message(message="تصویر موجود نیست", status_code=1404)
+            minio_client.remove_object("temp", object_name)
+            return Message(message="تصویر با موفقیت حذف شد", status_code=1200)
         except Exception as e:
-            return Message(message="خطلا در بارگذاری تصویر", status_code=1400)
+            return Message(message="تصویر با موفقیت حذف شد", status_code=1204)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
