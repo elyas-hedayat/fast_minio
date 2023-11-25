@@ -9,5 +9,5 @@ COPY . /app
 
 WORKDIR /app
 
-COPY ./entrypoint.sh /
-ENTRYPOINT ["sh", "/entrypoint.sh"]
+COPY ./docker_entrypoint.sh /
+ENTRYPOINT ["sh", "/docker_entrypoint.sh"]
