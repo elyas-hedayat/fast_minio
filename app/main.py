@@ -2,7 +2,6 @@ import binascii
 import io
 import os
 from typing import List, Optional
-from botocore.response import StreamingBody
 import strawberry
 from fastapi import FastAPI
 from minio import Minio
