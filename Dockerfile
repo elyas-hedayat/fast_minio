@@ -12,7 +12,7 @@ WORKDIR /app
 
 COPY ./docker_entrypoint.sh /
 
-EXPOSE 8024
+EXPOSE 8023
 
 USER elyas
 
