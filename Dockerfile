@@ -1,15 +1,13 @@
-FROM python:3.10
+FROM python:3.8.5-alpine
 
+RUN pip install --upgrade pip
 
-RUN adduser  myuser
-USER myuser
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt
 
-WORKDIR /code
+COPY ./django_project /app
 
-COPY requirements.txt /code/
+WORKDIR /app
 
-RUN pip install --no-cache-dir --upgrade && pip install -r requirements.txt
-
-COPY . /code
-
-EXPOSE 8024
+COPY ./entrypoint.sh /
+ENTRYPOINT ["sh", "/entrypoint.sh"]
