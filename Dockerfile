@@ -4,16 +4,12 @@ FROM python:3.10
 RUN adduser  myuser
 USER myuser
 
-
 WORKDIR /code
 
+COPY requirements.txt /code/
 
-COPY ./requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade && pip install -r requirements.txt
 
-
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-
-COPY ./app /code/app
+COPY . /code
 
 EXPOSE 8024
