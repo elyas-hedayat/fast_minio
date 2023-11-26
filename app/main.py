@@ -103,6 +103,7 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
+            print(file)
             object_id = _generate_code() + file.filename
             file_object = await file.read()
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
