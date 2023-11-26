@@ -105,12 +105,11 @@ class Mutation:
         try:
             object_id = _generate_code() + file.filename
             file_object = await file.read()
-            # tags = Tags(for_object=True)
-            # tags["user_token"] = token
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024)
             return Message(message="تصویر با موفقیت باگذاری شد", id=response.object_name, status_code=1200)
         except Exception as e:
+            print(str(e))
             return Message(message="خطلا در بارگذاری محصول", status_code=1400)
 
     @strawberry.mutation
