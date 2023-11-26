@@ -103,6 +103,7 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
+            print(file)
             object_id = _generate_code() + file.filename
             file_object = await file.read()
             tags = Tags(for_object=True)
@@ -111,6 +112,7 @@ class Mutation:
                                                part_size=10 * 1024 * 1024, tags=tags)
             return Message(message="تصویر با موفقیت باگذاری شد", id=response.object_name, status_code=1200)
         except Exception as e:
+            print(e)
             return Message(message="خطلا در بارگذاری محصول", status_code=1400)
 
     @strawberry.mutation
