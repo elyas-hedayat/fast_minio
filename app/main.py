@@ -103,17 +103,15 @@ class Mutation:
     @strawberry.mutation
     async def user_put_object(self, info: Info, file: Upload, token: str) -> Optional[Message]:
         try:
-            print(file)
             object_id = _generate_code() + file.filename
             file_object = await file.read()
             tags = Tags(for_object=True)
             tags["user_token"] = token
             response = minio_client.put_object("temp", object_id, io.BytesIO(file_object), length=-1,
                                                part_size=10 * 1024 * 1024, tags=tags)
-            return Message(message="تصویر با موفقیت باگذاری شد", id=response.object_name, status_code=1200)
+            return Message(message="فایل با موفقیت باگذاری شد", id=response.object_name, status_code=1200)
         except Exception as e:
-            print(e)
-            return Message(message="خطلا در بارگذاری محصول", status_code=1400)
+            return Message(message="خطلا در بارگذاری فایل", status_code=1400)
 
     @strawberry.mutation
     async def transfer_bucket(self, info: Info, input: FileTransferInput) -> Optional[Message]:
@@ -138,9 +136,9 @@ class Mutation:
     async def user_remove_object(self, info: Info, object_name: str, token: str) -> Optional[Message]:
         try:
             minio_client.remove_object("temp", object_name)
-            return Message(message="تصویر با موفقیت حذف شد", status_code=1200)
+            return Message(message="فایل با موفقیت حذف شد", status_code=1200)
         except Exception as e:
-            return Message(message="تصویر با موفقیت حذف شد", status_code=1204)
+            return Message(message="فایل با موفقیت حذف شد", status_code=1204)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
