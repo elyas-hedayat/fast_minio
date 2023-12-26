@@ -2,15 +2,13 @@ FROM python:3.10
 
 RUN addgroup --system elyas && adduser --system --group elyas
 
-COPY ./requirements.txt .
+COPY ../requirments/base.txt .
 
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r base.txt
 
-COPY . /app
+COPY .. /app
 
 WORKDIR /app
-
-COPY ./docker_entrypoint.sh /
 
 EXPOSE 8023
 

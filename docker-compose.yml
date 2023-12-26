@@ -4,7 +4,8 @@ services:
   minio_client:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8023
     container_name: minio_client
     restart: always
     ports:
