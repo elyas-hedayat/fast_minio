@@ -4,7 +4,7 @@ RUN addgroup --system elyas && adduser --system --group elyas
 
 COPY ./requirments /requirments
 
-RUN pip install --upgrade pip && pip install -r base.txt
+RUN pip install --upgrade pip && pip install -r /requirments/base.txt
 
 COPY . /app
 
