@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  minio_client:
+  minio_client_interface:
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -17,3 +17,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+  minio_queue:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: python   -u  .\consumers\minio_consumer.py
+    restart: always
+    container_name: minio_queue

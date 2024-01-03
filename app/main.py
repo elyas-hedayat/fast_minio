@@ -11,9 +11,9 @@ from strawberry.types import Info
 
 from app.inputs import BucketInput, FileTransferInput
 from app.types import Message
-from app.utils import minio_client, _generate_code
-from .response import Response
-from . import status
+from utils.utils import minio_client, _generate_code
+from utils.response import Response
+from utils import status
 
 
 @strawberry.type
