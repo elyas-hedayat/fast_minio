@@ -21,6 +21,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: python   -u  .\consumers\minio_consumer.py
+    command: python  -u  consumers/minio_consumer.py
     restart: always
     container_name: minio_queue
