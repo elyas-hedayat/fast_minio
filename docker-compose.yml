@@ -24,3 +24,11 @@ services:
     command: python  -u  consumers/minio_consumer.py
     restart: always
     container_name: minio_queue
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file: .env
+    command: server /data --console-address ":9001"
+
